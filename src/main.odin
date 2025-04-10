@@ -10,8 +10,7 @@ main :: proc() {
         os.exit(1)
     }
 
-    file_path := os.args[1]
-    handleFile(file_path)
+    handleFile(os.args[1])
 }
 
 handleFile :: proc(filepath: string) {
@@ -22,11 +21,11 @@ handleFile :: proc(filepath: string) {
     }
     defer delete(data, context.allocator)
 
-    new_data := string(data)
-    for line, content in strings.split_lines_iterator(&new_data) {
-        fmt.println(line)
-        fmt.println(content)
+    lines := string(data)
+    line_counter := 1
+    
+    for content in strings.split_lines_iterator(&lines) { 
+      lexer.lexer_init(line_counter, content)
+      line_counter += 1
     }
-
-    lexer_func()
 }
