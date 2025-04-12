@@ -1,13 +1,3 @@
 
 $string: string = "Hey Whats Up";
-$int: int = 12323;
-$undeclared: bool;
-$test: test_type = "asldköjf";
-
-echo $string;
-
-if ($string != " Something") {
-  echo "It said Hello";
-} else if ($string == "Hey Whats Up") {
-  echo "Its the same thing!"
-}
+$string = " Whats up homie, Im Tony  ";

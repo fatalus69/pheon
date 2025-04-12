@@ -5,58 +5,89 @@ import "core:os"
 import "core:strconv"
 import "core:strings"
 
-current_line: int = 0;
+current_line: int = 1;
+variables : ^map[string]Token;
 
 Token :: struct {
   name: string,
   type: string,
   value: string,
-  line: int,
 }
 
-lexerInit :: proc(line: int, content: string) {
+lexerInit :: proc(line: int, content: string, passed_variables: ^map[string]Token) -> (^Token) {
   current_line = line
-  tokenize(content)
+  variables = passed_variables
+  if content == "" {
+    return nil
+  }
+  return tokenize(content)
 } 
 
-tokenize :: proc(line_content: string) {
+//TODO handle ok returns for strings.replace's
+//TODO validate the value thats is being set to a variable, so a string variable doesnt hold an int
+//TODO Think about if to use only int & float or i8, i16, i32, .. (same for floats)
+// Returns the Token if it was a value that needs to be newly written to the map
+tokenize :: proc(line_content: string) -> (^Token) {
   line: string = strings.trim_space(line_content)
+  token: ^Token = new(Token)
+
   if strings.has_prefix(line, "$") {
     if strings.contains(line, "=") {
+      // Single variable that has a value specified on initializiation
       parts: []string = strings.split(line, "=")
+      
+      if !strings.contains(parts[0], ":") {
+        new_value, _ := strings.replace(parts[1], ";", "", -1)
+        new_value = strings.trim_space(new_value)
+        
+        removed_dollar, _ := strings.replace(parts[0], "$", "", -1)
+        var_name: string = strings.trim_space(removed_dollar)
+        
+        if var_name in variables {
+          value := variables[var_name]
+
+          if variables[var_name].type == "string" {
+            new_value, _ = strings.replace(new_value, "\"", "", -1)
+          }
+          
+          value.value = new_value
+          variables[var_name] = value
+          
+          return nil
+        } else {
+          error(current_line, "Trying to set value to undeclared variable")
+        }  
+      }
 
       //Declaration
       var_name, var_type := getDeclaration(parts[0])
 
-      //Value: let ok be there for now, maybe check if its actually okay
+      // Value
       value, ok := strings.replace(parts[1], ";", "", -1)
       value = strings.trim_space(value)
 
-      if (var_type == "string") {
+      if var_type == "string" {
         value, ok = strings.replace(value, "\"", "", -1)
       }
-
-      token := new(Token)
 
       token.name = var_name
       token.type = var_type
       token.value = value
-      token.line = current_line
-
-      fmt.println(token)
-
     } else {
+      // initializiation without setting a value 
+      // TODO currently sets Token.value to an empty string. => maybe set it to null or default value for each corresponding type
       var_name, var_type := getDeclaration(line)
-      token := new(Token)
 
       token.name = var_name
       token.type = var_type
-      token.line = current_line
-
-      fmt.println(token);
     }
-  } 
+    return token;
+  }
+  
+  //Assume there was no variable declaration or reassignment in the current line
+  return nil;
 }
+
 getDeclaration :: proc (declaration_string: string) -> (string, string) {
   declaration_parts: []string = strings.split(declaration_string, ":")
   if len(declaration_parts) < 2 {
@@ -97,10 +128,3 @@ error :: proc(line: int, message: string) {
   fmt.println("Error: ", message, " Thrown on line: ", line_str)
   os.exit(1)
 }
-
-// Token {
-//     kind: TokenKind,
-//     lexeme: string,
-//     line: int,
-//     column: int,
-// }
