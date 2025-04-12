@@ -24,7 +24,7 @@ tokenize :: proc(line_content: string) {
   if strings.has_prefix(line, "$") {
     if strings.contains(line, "=") {
       parts: []string = strings.split(line, "=")
-      
+
       //Declaration
       var_name, var_type := getDeclaration(parts[0])
 
@@ -36,20 +36,32 @@ tokenize :: proc(line_content: string) {
         value, ok = strings.replace(value, "\"", "", -1)
       }
 
-      fmt.println("Name: ", var_name, "\nType: ", var_type, "\nValue: ", value) 
+      token := new(Token)
+
+      token.name = var_name
+      token.type = var_type
+      token.value = value
+      token.line = current_line
+
+      fmt.println(token)
+
     } else {
       var_name, var_type := getDeclaration(line)
-      fmt.println("Name: ", var_name, "\nType: ", var_type)
+      token := new(Token)
+
+      token.name = var_name
+      token.type = var_type
+      token.line = current_line
+
+      fmt.println(token);
     }
   } 
 }
-
 getDeclaration :: proc (declaration_string: string) -> (string, string) {
   declaration_parts: []string = strings.split(declaration_string, ":")
   if len(declaration_parts) < 2 {
     error(current_line, "Invalid declaration: Missing Type")
   }
-
   var_type: string = strings.trim_space(declaration_parts[1])
   
   if strings.has_suffix(var_type, ";") {
