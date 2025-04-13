@@ -43,6 +43,10 @@ tokenize :: proc(line_content: string) -> (^Token) {
         removed_dollar, _ := strings.replace(parts[0], "$", "", -1)
         var_name: string = strings.trim_space(removed_dollar)
         
+        if !checkValueForType(new_value, variables[var_name].type) {
+          error(current_line, "Cannot set value")
+        }
+
         if var_name in variables {
           value := variables[var_name]
 
@@ -66,6 +70,10 @@ tokenize :: proc(line_content: string) -> (^Token) {
       value, ok := strings.replace(parts[1], ";", "", -1)
       value = strings.trim_space(value)
 
+      if !checkValueForType(value, var_type) {
+        error(current_line, "Error setting value")
+      }
+
       if var_type == "string" {
         value, ok = strings.replace(value, "\"", "", -1)
       }
@@ -86,6 +94,24 @@ tokenize :: proc(line_content: string) -> (^Token) {
   
   //Assume there was no variable declaration or reassignment in the current line
   return nil;
+}
+
+checkValueForType :: proc(value: string, type: string) -> bool {
+  switch type {
+  case "int":
+    bits := 64
+    _, err := strconv.parse_i64_of_base(value, 10, &bits)
+    return err
+  case "bool":
+    _, err := strconv.parse_bool(value)
+    return err
+  case "string" :
+    //TODO do research if you can actually check for a string without regex 
+    //return !strings.contains_any(value, "\"") 
+    return true
+  }
+  //Fall back
+  return false
 }
 
 getDeclaration :: proc (declaration_string: string) -> (string, string) {

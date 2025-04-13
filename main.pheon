@@ -1,3 +1,4 @@
 
 $string: string = "Hey Whats Up";
 $string = " Whats up homie, Im Tony  ";
+$test: int = "hi";
