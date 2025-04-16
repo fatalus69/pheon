@@ -1,4 +1,11 @@
 
 $string: string = "Hey Whats Up";
 $string = " Whats up homie, Im Tony  ";
-$test: int = "hi";
+$test
+: string
+=
+"hi"
+;
+
+echo($string);
+echo("test", 124);
