@@ -14,32 +14,40 @@ handleVariable :: proc(line: string, token: ^Token) -> (^Token) {
     if strings.contains(line, "=") {
       // Single variable that has a value specified on initializiation
       parts: []string = strings.split(line, "=")
-      
+
       if !strings.contains(parts[0], ":") {
         new_value, _ := strings.replace(parts[1], ";", "", -1)
         new_value = strings.trim_space(new_value)
         
-        removed_dollar, _ := strings.replace(parts[0], "$", "", -1)
-        var_name: string = strings.trim_space(removed_dollar)
+        buf: [4]byte
+        var_name_arr: []string = {strings.trim_space(parts[0]), "@", strconv.itoa(buf[:], current_line)} 
         
-        if !checkValueForType(new_value, variables[var_name].type) {
-          error(current_line, "Cannot set value")
-        }
+        var_name: string = strings.concatenate(var_name_arr[:])
+        var_name = strings.trim_left(var_name, "$")
 
-        if var_name in variables {
-          value := variables[var_name]
+        for variable in variables {
+          variable_name: string = strings.trim_space(strings.split(variable, "@")[0])
+          my_var_name: string = strings.trim_space(strings.split(var_name, "@")[0])
+          
+          if my_var_name == variable_name {
+            existing_type: string = variables[variable].type
+            
+            if !checkValueForType(new_value, existing_type) {
+              error(current_line, "Error assigning value")
+            }
 
-          if variables[var_name].type == "string" {
-            new_value, _ = strings.replace(new_value, "\"", "", -1)
+            if existing_type == "string" {
+              new_value, _ = strings.replace(new_value, "\"", "", -1)
+            }
+
+            token.name = my_var_name
+            token.type = existing_type
+            token.value = new_value
+            token.scope = variables[variable].scope
+
+            return token
           }
-          
-          value.value = new_value
-          variables[var_name] = value
-          
-          return nil
-        } else {
-          error(current_line, "Trying to set value to undeclared variable")
-        }  
+        }
       }
 
       //Declaration
@@ -111,11 +119,11 @@ getDeclaration :: proc (declaration_string: string) -> (string, string) {
     error_string: []string = {"Undefined type of ", var_type}
     error(current_line, strings.concatenate(error_string[:]))
   }
-  
+
   var_name: string = strings.trim_space(declaration_parts[0])
   var_name = strings.trim_left(var_name, "$")
 
-  return var_name, var_type
+   return var_name, var_type
 }
 
 validateType :: proc(type: string) -> (bool) {

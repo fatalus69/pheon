@@ -1,6 +1,7 @@
 package main;
 
 import "lexer"
+import "parser"
 import "core:fmt"
 import "core:os"
 import "core:strings"
@@ -50,20 +51,23 @@ handleFile :: proc(filepath: string) {
       token, type := lexer.lexerInit(line_counter, accumulated_lines, &variables)
 
       if token.variable != nil {
-        variables[token.variable.name] = token.variable^
+        buf: [4]byte
+        var_name_arr: []string = {token.variable.name, "@", strconv.itoa(buf[:], line_counter)} 
+        
+        var_name: string = strings.concatenate(var_name_arr[:])
+        var_name = strings.trim_left(var_name, "$")
+
+        variables[var_name] = token.variable^
       }else if token.keyword != nil {
-        if _, found := keywords[token.keyword.name]; !found {
-          keywords[token.keyword.name] = token.keyword^
-        } else {
-          buf: [4]byte
-          arr: []string = {token.keyword.name, "_", strconv.itoa(buf[:], line_counter)}
-          keywords[strings.concatenate(arr[:])] = token.keyword^
-        }
+        buf: [4]byte
+        keyword_name_arr: []string = {token.keyword.name, "@", strconv.itoa(buf[:], line_counter)}
+        keyword_name: string = strings.concatenate(keyword_name_arr[:])
+
+        keywords[keyword_name] = token.keyword^
       } 
       accumulated_lines = ""
     } 
     line_counter += 1
   }
-  fmt.println(variables)
-  fmt.println(keywords)
+  parser.parse(variables, keywords)
 }

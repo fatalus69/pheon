@@ -4,6 +4,7 @@ import "core:fmt"
 import "core:os"
 import "core:strings"
 import "core:mem"
+import "core:strconv"
 
 keywords: []string = {"echo", "if"} 
 
@@ -43,7 +44,7 @@ handleKeywords :: proc(value: string, keyword_token: ^KeywordToken) ->(^KeywordT
             }  
           append(&args, args_string)
         }
-   
+
         keyword_token.name = keyword
         keyword_token.line = current_line
         keyword_token.args = args[:]

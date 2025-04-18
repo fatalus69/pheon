@@ -1,6 +1,8 @@
 
 $string: string = "Hey Whats Up";
-$string = " Whats up homie, Im Tony  ";
+$string =  Whats up homie, Im Tony  ";
+$new_var: string = "yo";
+$another: string = "stringinator--";
 $test
 : string
 =
